@@ -4,6 +4,7 @@ import os
 import os.path
 import time
 import tkinter as t
+import math
 
 tup1 = ('获取当前包名和activity', '获取当前应用版本信息', '获取当前apk', '截取当前屏幕',
         '重启当前设备', '杀掉当前应用', '清除当前应用数据', '卸载当前应用')
@@ -132,63 +133,6 @@ def uninstall():
     sh('adb uninstall ' + packageName)
     return
 
-
-def handler(index1):
-    try:
-        print("processButton = " + str(index1))
-        text.delete(0.0, t.END)
-        switcher = {
-            0: getCurrrentActivity,
-            1: getCurrentAppVersionInfo,
-            2: getCurrentApk,
-            3: getScreenShots,
-            4: reboot,
-            5: killCurrentApp,
-            6: clearData,
-            7: uninstall
-        }
-        return switcher.get(index1)()
-    except Exception:
-        textln(Exception)
-
-def get_screen_size(window):
-    return window.winfo_screenwidth(), window.winfo_screenheight()
-
-
-def get_window_size(window):
-    return window.winfo_reqwidth(), window.winfo_reqheight()
-
-
-def center_window(root, width, height):
-    screenwidth = root.winfo_screenwidth()
-    screenheight = root.winfo_screenheight()
-    size = '%dx%d+%d+%d' % (width, height, (screenwidth - width) / 2, (screenheight - height) / 2)
-    root.geometry(size)
-
-# 换行的text
-def textln(content):
-    text.insert(t.END, content + '\n')
-
-def initView():
-    global text
-    window = t.Tk()
-    window.title("Android Tools Made By YangShangZhen")
-    center_window(window, 800, 500)
-    frame1 = t.Frame(window)
-    frame1.pack()
-    for index in range(8):
-        if index <= 3:
-            button1 = t.Button(frame1, padx=1, pady=1, height=1,
-                               text=tup1[index], command=lambda index=index: handler(index))
-            button1.grid(padx=10, pady=10, row=1, column=index)
-        else:
-            button2 = t.Button(frame1, padx=1, pady=1, height=1,
-                               text=tup1[index], command=lambda index=index: handler(index))
-            button2.grid(padx=10, pady=10, row=2, column=index - 4)
-    text = t.Text(window, foreground='black', font=('宋体', 12), spacing1=10)
-    text.pack(padx=0, pady=20)
-    window.mainloop()
-
 # 解析当前的版本号和版本名字
 # 解析的格式根据 versionCode='694' versionName='11.5.2.942' 如果格式不对 可能会出现错误
 def getCurrentAppVersionInfo():
@@ -196,7 +140,7 @@ def getCurrentAppVersionInfo():
     vCodePattern = r'versionCode=.+?\s'
     vNamePattern = r'versionName=.+?\s'
     vCodeNumberPattern = r'\d+'
-    vNameNumberPattern = r'\d.+\d'
+    vNameNumberPattern = r'\d.+[a-zA-Z0-9]'
     versionCodeInfo = re.findall(vCodePattern, versionInfo)
     print(versionCodeInfo)
     defaultVersionCode = ''
@@ -218,6 +162,70 @@ def getCurrentAppVersionInfo():
     textln(str(versionCodeDict))
     textln(str(versionNameDict))
     return
+
+# 安装指定路径的apk
+def installApk():
+    p = subprocess.Popen(' adb install -r \\\\172.28.2.84\kf2share\\app\Debug\Pad\OneSearchDark\\2.3.0\OneSearchDark.apk', shell=True,
+                         stdout=subprocess.PIPE, stderr=subprocess.STDOUT)
+    while (True):
+        line = p.stdout.readline().decode("utf-8")
+        if not line:
+            break
+        print(line)
+
+def handler(index1):
+    try:
+        print("processButton = " + str(index1))
+        text.delete(0.0, t.END)
+        switcher = {
+            0: getCurrrentActivity,
+            1: getCurrentAppVersionInfo,
+            2: getCurrentApk,
+            3: getScreenShots,
+            4: reboot,
+            5: killCurrentApp,
+            6: clearData,
+            7: uninstall,
+            8: installApk
+        }
+        return switcher.get(index1)()
+    except Exception:
+        textln(Exception)
+
+def get_screen_size(window):
+    return window.winfo_screenwidth(), window.winfo_screenheight()
+
+def get_window_size(window):
+    return window.winfo_reqwidth(), window.winfo_reqheight()
+
+def center_window(root, width, height):
+    screenwidth = root.winfo_screenwidth()
+    screenheight = root.winfo_screenheight()
+    size = '%dx%d+%d+%d' % (width, height, (screenwidth - width) / 2, (screenheight - height) / 2)
+    root.geometry(size)
+
+# 换行的text
+def textln(content):
+    text.insert(t.END, content + '\n')
+
+def initView():
+    global text
+    window = t.Tk()
+    window.title("Android Tools Made By YangShangZhen")
+    center_window(window, 800, 500)
+    frame1 = t.Frame(window)
+    frame1.pack()
+    for index in range(len(tup1)):
+        x = math.ceil((index + 1) / 4)
+        y = index - (x - 1) * 4
+        print("x = " + str(x) + " y = " + str(y))
+        button1 = t.Button(frame1, padx=1, pady=1, height=1,
+                               text=tup1[index], command=lambda index=index: handler(index))
+        button1.grid(padx=10, pady=10, row=x, column=y)
+    text = t.Text(window, foreground='black', font=('宋体', 12), spacing1=10)
+    text.pack(padx=0, pady=20)
+    window.mainloop()
+
 
 if __name__ == '__main__':
     initView()
